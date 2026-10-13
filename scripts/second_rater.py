@@ -13,6 +13,7 @@ Usage:
     python scripts/second_rater.py
 """
 
+import re
 import sys
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
@@ -131,7 +132,13 @@ def main():
     sample[["review_id", "rating", "title", "text", "theme", "second_theme"]].rename(
         columns={"theme": "first_theme"}
     ).to_csv(LABELS_PATH, index=False)
-    REPORT_PATH.write_text(build_report(sample, themes), encoding="utf-8")
+    report = build_report(sample, themes)
+    # Keep sections other scripts add between <!-- name:start --> / <!-- name:end --> markers.
+    if REPORT_PATH.exists():
+        blocks = re.finditer(r"<!-- ([\w-]+):start -->.*?<!-- \1:end -->",
+                             REPORT_PATH.read_text(encoding="utf-8"), re.S)
+        report += "".join("\n" + b.group(0) + "\n" for b in blocks)
+    REPORT_PATH.write_text(report, encoding="utf-8")
 
     agree = (sample["theme"] == sample["second_theme"]).mean()
     print(f"Agreement: {agree:.0%}. Report written to {REPORT_PATH.relative_to(ROOT)}")

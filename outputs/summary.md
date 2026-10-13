@@ -110,6 +110,25 @@ Treat these with caution: with 40 comparisons, a few will pass by chance, and sm
 
 **Reviews blaming a recent update (19):** bugs_and_reliability 53%, organization_and_sorting 11%, sharing_and_sync 11%, general_praise 11%, ease_of_use_and_design 5%, missing_features 5%, app_integrations 5%. For comparison, bugs_and_reliability is 18% of all negative and neutral reviews.
 
+## Alarm and notification requests around Apple's Urgent changes
+
+Urgent alarms shipped in iOS 26.2 (Dec 2025); iOS 26.4 (Mar 24, 2026) added an Urgent smart list and a long-press "Mark as Urgent" shortcut. A review counts as an alarm or notification request if it is a feature request in the notifications_and_alarms theme or its summary asks for alarm-style alerts or snooze. Periods use the app version (2.0 shipped with iOS 26.2) and, within it, the review date. The US only appears from iOS 26.4 on, so compare periods on non-US reviews.
+
+| Countries | Period | Reviews | Alarm/notification requests | Share of reviews | Share of feature requests |
+|---|---|---:|---:|---:|---:|
+| All | Before iOS 26.2 | 862 | 36 | 4.2% | 21% |
+| All | iOS 26.2–26.3 | 117 | 5 | 4.3% | 21% |
+| All | iOS 26.4 and later | 971 | 31 | 3.2% | 23% |
+| Non-US | Before iOS 26.2 | 862 | 36 | 4.2% | 21% |
+| Non-US | iOS 26.2–26.3 | 117 | 5 | 4.3% | 21% |
+| Non-US | iOS 26.4 and later | 521 | 14 | 2.7% | 19% |
+| US | iOS 26.4 and later | 450 | 17 | 3.8% | 27% |
+
+Change in share of reviews for iOS 26.4 and later (non-US), two-proportion z-test:
+
+- vs Before iOS 26.2: 4.2% → 2.7% (p = 0.15)
+- vs iOS 26.2–26.3: 4.3% → 2.7% (p = 0.36)
+
 ## Reviews mentioning competitors
 
 30 reviews (1.5%) name a competing app or platform · average rating 3.87★ · 60% are feature requests. Matches are keyword-based, so treat counts as approximate.

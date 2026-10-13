@@ -49,3 +49,24 @@ A random sample of 100 reviews from `data/classified_reviews.csv` (seed 42) was 
 > **5★ · Good**: Good (`12405162461`)
 
 3 other disagreement pair(s) not shown; see `outputs/second_rater_labels.csv`.
+
+<!-- priority-check:start -->
+## Priority themes: second-model consistency check
+
+**This is a consistency check between two AI models, not human validation.** 10 random reviews (seed 42) from each of the memo's three priority themes were re-labeled by `claude-sonnet-5-5` with the same `themes.md` codebook and prompt as the original `claude-haiku-5-5` labels, without seeing them. Agreement means the two models read the review the same way; it does not show the label is correct.
+
+**Overall:** 28/30 (93%) agree.
+
+| claude-haiku-5-5 theme | Agree | claude-sonnet-5-5 chose instead |
+|---|---:|---|
+| bugs_and_reliability | 10/10 | - |
+| notifications_and_alarms | 9/10 | `missing_features` (1) |
+| intrusive_prompts | 9/10 | `bugs_and_reliability` (1) |
+
+### Disagreements
+
+> **`notifications_and_alarms` → `missing_features`** · 3★ · **Days**: Would be great if i can choose what days the reminder pops up currently it only works on weekends or weekdays i would like to filter days out (`13294604235`)
+
+> **`intrusive_prompts` → `bugs_and_reliability`** · 5★ · **Alarm**: I cannot open the app due to a banner about alarms blocking the opening of the App (`13560876267`)
+
+<!-- priority-check:end -->

@@ -42,4 +42,4 @@ Common asks: manual order that stays put, top-or-bottom placement for new items,
 - **500-review cap:** Apple's feed returns only the ~500 most recent reviews per country, so the US covers only Aug–Oct 2026.
 - **Unhappy users review more:** these reviews average 4.2★, against 4.8★ across ~1M App Store ratings.
 - **Reviews only:** we have no usage data, so Reach counts reviews, not affected users.
-- **Validation method:** a second AI model checked the labels, not people. The 90% agreement is driven by praise: only 3–5 checked reviews fell in each priority theme. Hand-labeling is still pending. iOS periods are inferred from review dates and app versions.
+- **Validation method:** only a second AI model checked the labels. That shows consistency, not correctness. It agreed on 90% of 100 random reviews, mostly praise. A targeted check of 10 reviews per priority theme agreed on 28 of 30 (bugs 10/10, alerts 9/10, pop-ups 9/10). Hand-labeling is still pending. iOS periods are inferred from review dates and app versions.

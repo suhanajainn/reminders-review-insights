@@ -6,7 +6,8 @@ Reads data/classified_reviews.csv and produces two breakdowns:
 
 For each breakdown it saves five interactive charts (HTML) to
 outputs/charts/<breakdown>/. The combined summary in outputs/summary.md also
-covers theme shifts by app/iOS version, reviews that mention competitors, and
+covers theme shifts by app/iOS version, alarm and notification requests
+before and after Apple's Urgent changes, reviews that mention competitors, and
 the most common specific feature requests.
 
 Usage:
@@ -71,6 +72,12 @@ APP_VERSIONS = {
     "1.7": "iOS 17", "1.8": "iOS 18", "1.9.1": "iOS 26", "2.0": "iOS 26.2", "2.6": "iOS 27",
 }
 # Reviews that name a specific iOS release, or blame a recent update in general.
+# Periods for alarm/notification requests around Apple's Urgent changes:
+# Urgent alarms shipped in iOS 26.2 (app version 2.0), and iOS 26.4 (released
+# March 24, 2026) added an Urgent smart list and a "Mark as Urgent" shortcut.
+URGENT_VERSIONS = {"2.0", "2.6"}
+IOS_26_4_RELEASE = pd.Timestamp("2026-03-24", tz="UTC")
+URGENT_PERIODS = ["Before iOS 26.2", "iOS 26.2–26.3", "iOS 26.4 and later"]
 IOS_MENTION = r"\bios ?(1[5-9]|2[0-7])(\.\d+)?\b|\b(1[78]|2[67])\.\d\b|\bliquid glass\b"
 UPDATE_BLAME = (r"\b(since|after) (the )?(latest |last |new |recent )?(ios )?update"
                 r"|\bupdate (broke|ruined|messed)|\b(new|latest|last) update\b")
@@ -321,6 +328,59 @@ def version_section(df):
     return lines
 
 
+def urgent_period(row):
+    if row["version"] not in URGENT_VERSIONS:
+        return URGENT_PERIODS[0]
+    return URGENT_PERIODS[1] if row["date"] < IOS_26_4_RELEASE else URGENT_PERIODS[2]
+
+
+def urgent_section(df):
+    """Alarm/notification feature requests before and after Apple's Urgent changes."""
+    keywords = "|".join(SPECIFIC_REQUESTS[k] for k in SPECIFIC_REQUESTS
+                        if k.startswith(("Alarm-style", "Snooze")))
+    data = df.assign(
+        period=df.apply(urgent_period, axis=1),
+        alarm_request=df["is_feature_request"] & (
+            (df["theme"] == "notifications_and_alarms")
+            | df["summary"].str.lower().str.contains(rf"\b(?:{keywords})\b", regex=True)
+        ),
+    )
+    lines = [
+        "## Alarm and notification requests around Apple's Urgent changes",
+        "",
+        "Urgent alarms shipped in iOS 26.2 (Dec 2025); iOS 26.4 (Mar 24, 2026) added an Urgent "
+        "smart list and a long-press \"Mark as Urgent\" shortcut. A review counts as an alarm or "
+        "notification request if it is a feature request in the notifications_and_alarms theme or "
+        "its summary asks for alarm-style alerts or snooze. Periods use the app version (2.0 shipped "
+        "with iOS 26.2) and, within it, the review date. The US only appears from iOS 26.4 on, so "
+        "compare periods on non-US reviews.",
+        "",
+        "| Countries | Period | Reviews | Alarm/notification requests | Share of reviews "
+        "| Share of feature requests |",
+        "|---|---|---:|---:|---:|---:|",
+    ]
+    groups = {"All": data, "Non-US": data[data["country"] != "us"], "US": data[data["country"] == "us"]}
+    for name, group in groups.items():
+        for period in URGENT_PERIODS:
+            rows = group[group["period"] == period]
+            if rows.empty:
+                continue
+            requests, flagged = rows["alarm_request"].sum(), rows["is_feature_request"].sum()
+            lines.append(f"| {name} | {period} | {len(rows):,} | {requests} | {requests / len(rows):.1%} "
+                         f"| {requests / flagged:.0%} |")
+
+    non_us = groups["Non-US"]
+    latest = non_us[non_us["period"] == URGENT_PERIODS[2]]
+    lines += ["", "Change in share of reviews for iOS 26.4 and later (non-US), two-proportion z-test:", ""]
+    for period in URGENT_PERIODS[:2]:
+        earlier = non_us[non_us["period"] == period]
+        p = two_proportion_p(latest["alarm_request"].sum(), len(latest),
+                             earlier["alarm_request"].sum(), len(earlier))
+        lines.append(f"- vs {period}: {earlier['alarm_request'].mean():.1%} → "
+                     f"{latest['alarm_request'].mean():.1%} (p = {p:.2f})")
+    return lines
+
+
 def competitor_section(df):
     text = df["title"].fillna("") + " " + df["text"].fillna("")
     hits = pd.DataFrame({name: text.str.contains(p, regex=True) for name, p in COMPETITORS.items()})
@@ -376,12 +436,13 @@ def main():
             "5_feature_requests": chart_requests(topics, n_requests, label),
         }
         for filename, fig in charts.items():
-            fig.write_html(out / f"{filename}.html", include_plotlyjs="cdn",
+            # A fixed div_id keeps reruns from producing diffs when nothing changed.
+            fig.write_html(out / f"{filename}.html", include_plotlyjs="cdn", div_id=filename,
                            config={"displaylogo": False})
         lines += markdown_tables(name, label, data, table, topics, n_requests) + [""]
         print(f"{label}: {len(data):,} reviews, charts in {out.relative_to(ROOT)}")
 
-    lines += version_section(df) + [""] + competitor_section(df) + [""]
+    lines += version_section(df) + [""] + urgent_section(df) + [""] + competitor_section(df) + [""]
     SUMMARY_PATH.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
     print(f"Summary written to {SUMMARY_PATH.relative_to(ROOT)}")
 
