@@ -96,15 +96,15 @@ def save(rows):
     os.replace(tmp_path, OUTPUT_PATH)
 
 
-def classify(client, system, schema, review):
+def classify(client, system, schema, review, model=MODEL, max_tokens=2048):
     prompt = (
         f"Star rating: {review['rating']}\n"
         f"<title>{review['title']}</title>\n"
         f"<review>{review['text']}</review>"
     )
     response = client.messages.create(
-        model=MODEL,
-        max_tokens=2048,
+        model=model,
+        max_tokens=max_tokens,
         system=[{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}],
         messages=[{"role": "user", "content": prompt}],
         output_config={"format": {"type": "json_schema", "schema": schema}},
