@@ -149,7 +149,8 @@ def style(fig, title, subtitle, height):
         hoverlabel={"bgcolor": "white", "bordercolor": GRID, "font": {"color": INK, "family": FONT}},
     )
     fig.update_xaxes(gridcolor=GRID, zeroline=False, linecolor=BASELINE, tickfont={"color": INK_MUTED})
-    fig.update_yaxes(gridcolor=GRID, zeroline=False, linecolor=BASELINE, tickfont={"color": INK_SECONDARY})
+    fig.update_yaxes(gridcolor=GRID, zeroline=False, linecolor=BASELINE, tickfont={"color": INK_SECONDARY},
+                     automargin=True)
     return fig
 
 
@@ -334,17 +335,22 @@ def urgent_period(row):
     return URGENT_PERIODS[1] if row["date"] < IOS_26_4_RELEASE else URGENT_PERIODS[2]
 
 
-def urgent_section(df):
-    """Alarm/notification feature requests before and after Apple's Urgent changes."""
+def with_alarm_requests(df):
+    """Add the iOS period and whether each review is an alarm/notification request."""
     keywords = "|".join(SPECIFIC_REQUESTS[k] for k in SPECIFIC_REQUESTS
                         if k.startswith(("Alarm-style", "Snooze")))
-    data = df.assign(
+    return df.assign(
         period=df.apply(urgent_period, axis=1),
         alarm_request=df["is_feature_request"] & (
             (df["theme"] == "notifications_and_alarms")
             | df["summary"].str.lower().str.contains(rf"\b(?:{keywords})\b", regex=True)
         ),
     )
+
+
+def urgent_section(df):
+    """Alarm/notification feature requests before and after Apple's Urgent changes."""
+    data = with_alarm_requests(df)
     lines = [
         "## Alarm and notification requests around Apple's Urgent changes",
         "",
